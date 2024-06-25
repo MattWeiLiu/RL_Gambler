@@ -1,0 +1,92 @@
+data:
+  data_path: "gs://xxxx.csv"
+  num_gaussian: 5
+  time_length: 16
+  train_test_split: 0.8
+
+train:
+  batch_size: 4
+  epoch: 50
+
+test:
+  batch_size: 2
+
+model:
+  loss: "MeanSquaredError"    # "MeanSquaredError", "MDF"
+  metrics: "MeanSquaredError"
+
+optimizer:
+  method: "adam"
+  learning_rate: 1e-5
+
+weights:
+  simulation: "weights/best_simulation_model.h5"
+
+RL_PARAMETER:
+  MEAN_REWARD_BOUND: 19.5
+  INIT_BALANCE: 0
+
+  GAMMA: 0.99
+  BATCH_SIZE: 128
+  REPLAY_SIZE: 10000
+  OBSERVATION_SIZE: 15
+  LEARNING_RATE: 1e-5
+  SYNC_TARGET_FRAMES: 1000
+  REPLAY_START_SIZE: 10000
+
+  EPSILON_DECAY_LAST_EPOCH: 1e5
+  EPSILON_START: 1.0
+  EPSILON_FINAL: 0.02
+
+#### Game Configs - PM can modify it according to the SPEC.
+## recognize the revenue from the game pool.
+overflow:
+  size: 40000000 # While the pool balance is over this value, the game will be overflowed - transfer difference from pool to the revenue.
+  sequence: 20 # Check overflow every N rounds.
+
+## Risk Control System
+# A system to control the RTP of the game.
+# See the [SPEC](https://docs.google.com/presentation/d/1KV2bWTbb4_79rv82ldeLPcGRR3Ou4t-m-rn8eO4rubQ/edit#slide=id.g13a5eb8e6c5_0_192) for more details.
+# Notice:
+#  - The sum of the probability of each index must be 10000.
+#  - Item key in each index must be the same, and highly correlated to the game, e.g., `small`, `leopard`, `large` for LuxuryDice game.
+#  - There are 3 pool levels: `emergency`, `loaded`, `fair`. The tax of each level is defined in `tax` field.
+#  - The `safeline` and `loadedgate` fields affect the pool level. See the [mechanism](https://docs.google.com/presentation/d/1KV2bWTbb4_79rv82ldeLPcGRR3Ou4t-m-rn8eO4rubQ/edit#slide=id.g13baac2268b_0_14) for more details.
+probabilityTable: # Basic probability of each index.
+  # index 0
+  - large: 4730
+    leopard: 510
+    small: 4760
+  # index 1
+  - large: 4740
+    leopard: 480
+    small: 4780
+  # index 2
+  - large: 4750
+    leopard: 450
+    small: 4800
+  # index 3
+  - large: 4760
+    leopard: 430
+    small: 4810
+
+index_round: 100
+
+odds: # The odds of each item if a player win.
+  small: 2 # 2 times to payout.
+  leopard: 20 # 20 times to payout.
+  large: 2 # 2 times to payout.
+
+tax: # The tax of each round - always transfer from game pool to revenue each round.
+  emergency: 0.01 # 1%
+  loaded: 0.06 # 6%
+  fair: 0.06 # 6%
+  # 3/22 Switch from 2.5/5/5 to 0/6/6
+  # 3/26 change tax from 0% to 1% to avoid logic error during Emergency
+
+safeline: 35000000
+
+loadedgate: 100000
+
+simulation_model_path: "weights/best_luxury_dice_simulation_model.tf"
+starting_data_path: "gs://bin_for_aiops/GambleMaster/LuxuryDice/luxury_dice_v2.npz"

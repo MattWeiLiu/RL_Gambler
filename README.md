@@ -1,0 +1,1 @@
+python simulation_trainer.py | tee -a log
